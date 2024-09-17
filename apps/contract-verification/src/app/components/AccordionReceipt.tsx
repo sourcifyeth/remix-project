@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { SubmittedContract, VerificationReceipt } from '../types'
 import { shortenAddress, CustomTooltip } from '@remix-ui/helper'
 import { AppContext } from '../AppContext'
+import { CopyToClipboard } from '@remix-ui/clipboard'
 
 interface AccordionReceiptProps {
   contract: SubmittedContract
@@ -13,13 +14,57 @@ export const AccordionReceipt: React.FC<AccordionReceiptProps> = ({ contract, in
 
   const [expanded, setExpanded] = React.useState(false)
 
-  const chainName = useMemo(() => {
-    return chains.find((chain) => chain.chainId === parseInt(contract.chainId))?.name ?? 'Unknown Chain'
+  const chain = useMemo(() => {
+    return chains.find((c) => c.chainId === parseInt(contract.chainId))
   }, [contract, chains])
+  const chainName = chain?.name ?? 'Unknown Chain'
 
   const toggleAccordion = () => {
     setExpanded(!expanded)
   }
+
+  return (
+    <div className={`${expanded ? 'bg-light' : 'border-bottom '}`}>
+      <div className="d-flex flex-row align-items-center">
+        <button className="btn" onClick={toggleAccordion} style={{ padding: '0.45rem' }}>
+          <i className={`fas ${expanded ? 'fa-angle-down' : 'fa-angle-right'} text-secondary`}></i>
+        </button>
+
+        <div className="small w-100 text-uppercase overflow-hidden text-break text-nowrap">
+          <CustomTooltip placement="top" tooltipClasses="text-nowrap" tooltipText={`Contract: ${contract.contractName},  Address: ${contract.address}, Chain: ${chainName}`}>
+            <span>
+              {contract.contractName} at {shortenAddress(contract.address)}
+            </span>
+          </CustomTooltip>
+        </div>
+
+        <button className="btn" style={{ padding: '0.15rem' }}>
+          <CopyToClipboard tip="Copy" content={contract.address} direction={'top'} />
+        </button>
+      </div>
+
+      <div className={`${expanded ? '' : 'd-none'} px-2 pt-2 pb-3 small`}>
+        <div>
+          <span className="font-weight-bold">Chain: </span>
+          {chainName} ({contract.chainId})
+        </div>
+        <div>
+          <span className="font-weight-bold">File: </span>
+          <span className="text-break">{contract.filePath}</span>
+        </div>
+        <div>
+          <span className="font-weight-bold">Submitted at: </span>
+          {new Date(contract.date).toLocaleString()}
+        </div>
+
+        {/* <CustomTooltip placement="top" tooltipText={`API URL: ${contract.verifierInfo}`}>
+            <span>
+              {contract.contractName} at {shortenAddress(contract.address)}
+            </span>
+          </CustomTooltip> */}
+      </div>
+    </div>
+  )
 
   return (
     <div key={contract.address + '-' + index} className="bg-secondary p-3 accordion-item" id={contract.address + '-accordion-' + index}>
